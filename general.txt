@@ -1,3 +1,5 @@
+URL del curso: https://www.udemy.com/course/rxjs-de-cero-hasta-los-detalles/
+
 cap 11
 npm i
 
