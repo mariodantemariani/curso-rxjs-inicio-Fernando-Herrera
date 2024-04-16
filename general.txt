@@ -1,0 +1,102 @@
+cap 11
+npm i
+
+npm start
+
+--
+.next(algo); emite
+.complete(): ya no voy a emitir nada
+
+argumentos de un suscribe: response, error y complete (complete sin argumento complete()=>)
+clearInterval()<-???
+
+Funciones para crear observables
+- .of(): crea observables en base a un conj de elementos, los emite en sincronia y tiene un fin, Retorna un tipo obervable
+
+- fromEvent: crea observables de ciertos eventos eventTarget.
+- range: emite una secuencia de nros en base a un rango, es sincronico, pero se puede hacer asycronico con asyncScheduler
+- interval & timer async x naturaleza <--verlo again
+- time(0), tan pronto como JS y el stack lo permitan, NO es cero segundos
+- timer(2000,1000) empieza a contar luego de 2 seg
+- timer(0)  es lo mismo q si tuvera cero
+-asyncScheduler: crea una subscripcion, NO un observable, hace lo mismo que setTimeout y setInterval.
+- asyncScheduler.schedule primer parametro no puede ser una funcion flecha
+/**
+ * of = toma argumentos y genera una secuencia
+ * from = array, promise, iterable, observable
+ */
+Operadores
+map: transformar lo q emite el observable en otra cosa. map(x=>X*10)
+pluck():  se utiliza para extraer un valor específico de una secuencia de objetos emitidos por un Observable, basándose en una ruta de propiedades. Es útil para simplificar el acceso a datos específicos y evitar la necesidad de múltiples operaciones de transformación. si dentro de un objeto, hacemos .pipe(pluck(lastname)) obtenemos esa propiedad. si es dentro de otro objeto es pluck('objeto',atributo).
+mapTo: transformar entrada en una salida especifica
+filter: filtrar las emisiones que emite el observable. Deja pasar unicamente los valores que pasan la condicion
+los operadores se ejecutan de arriba a abajo, van separados por coma.
+tap:emite cosas al pasar x el tap. Disparar eventos secundarios (info/evento) cuando se cumple determinada accion pasando x el tap. es util para depurar/debugear las cosas
+Reduce: hace lo mismo que el JS. aplicar una funcion acumuladora a las emisiones producidas x el observable. Se emite recien cuando el observable se completa
+scan: igual q el reduce, pedo apenas entran van saliendo con el valor acumulado. no pasa nada cuando el observable se completa
+
+Otros operadores
+take: limitar la cantidad de suscripciones que se pueden emitir. cuando llega al limite lanza el complete().numero muy alto se ejecuta hasta q toma todos los valores. take cancela todos los restantes valores.
+first: emite el primer valor fist(), tb se le puede poner una condicion. se emite hasta el primero que se completa el observable.
+takeWhile: recibe valores hasta q la condicion se cumpla.no emite el valor q hace q la condicion se cumpla (a menos q pongamos la bandera en true).
+takeUntil:recibe un observable, emite valores hasta que el segundo observable cumpla la condicion.
+distinct: emite valores unicos. ignora los repetidos. usa el  ===
+distinctUntilChange: igual que el anterior. emite cuando el valor anterior no es el mismo. [1,2,2,3] -> [1,2,3]
+distinctUntilKeyChange: emite cuando la propiedad 'k' cambia. [k=1,K=2,k=2,k=3] -> [k=1,K=2,k=3]
+
+Operadores de tiempo
+debounceTime: emite el valor cuando el observable se completa o cuando el tiempo especificado se cumple.
+throttleTime: emite un valor, lo deja pasar y empieza a contar el tiempo despues de emitir, ignora todo lo q pasa durante el tiempo q estuvo contando y vuelve a emitir cuando pasa todo el intervalo dado
+sampleTime: ve el ultimo valor emitido en un intervalo de tiempo. si el tiempo es 1 seg y emito 1,2,3 en ese seg, solo ve 3. Si no emite nada en ese tiempo, no muestra nada
+sample: emite el ultivo valor emitido por el observable hasta que el otro observable emita valor. sample(observable).
+auditTime: emite el ultimo valor que ha sido emitido por el obervable en un intervalo de tiempo. Si se completa antes del tiempo, no emite nada. 
+
+Dif entre el sampleTime y el auditTime
+ - auditTime emite valores basado en el intervalo de tiempo que estableces... es decir, emite algo y luego espera "X" cantidad de segundos a ver si hay una nueva emisión y lo emite.
+ - SampleTime, emite el último valor pero es como un cronómetro, siempre está pendiente de la cantidad de segundos que especificas y emite el último valor dentro de ese lapso de tiempo.
+ 
+ RXJS - AJAX
+ 
+ 
+ //
+ operadores de transformación.
+ mergeAll: emite un observable por cada observable que emita un observable. mergeAll(2) -> merge(observable1,observable2) -> merge(observable3,observable4)
+    "operadores de aplanamiento"
+  
+  
+  switchMap: recibe un callback q retorna un obervable, ese observable es el q se va a suscribir para hacer algo en la salida. cuando uso switchMap cancela las operaciones anteriores
+   va a mantener el ultimo obervable emitido.
+  
+  
+  diferencia entre mergemap y switchmap: 
+   mergeMap: emite un observable por cada valor que emite el observable. 
+   switchMap: emite un observable por cada observable que emita un observable.
+   mergemap conntinua con el obserbable anterior, mientras que switchMap cancela todas las emisiones anteriores y deja solo la actual.
+   concatMap: ?? ejecuta un observable luego de que termina el anterior
+      se ejecutan uno despues del otro.
+   exhaustMap:mantiene una subscripcion activa antes de poder añadir otra subscripcion para ver valores (si emite algo cuando se está ejecutando, la ignora)
+      es util cuando el obserbable emite muchos valores que pueden ser ignorados
+   
+//combinaciones
+startWith: empieza con el objeto mandado, luego sigue con la secuencia dle obervable.
+endWith: antes que se complete el observable, agrega lo q hay en el endWith.
+concat: concatena el observable con otro observable.cuando se complete el obserbable 1, emite el observable 2. no empieza el siguiente hasta q el actual no se complete. al final la salida son todos los resultados
+merge: combina los observables simultaneamente. los emite a la vez. no se dispata el complete hasta que todos los obsevables se completen. El orden de la salida va a ser el primero que emita valor.
+combineLatest: permite mandar obserbables como argumentos, combinarlos y emitir los valores de todos los obsevables internos simultaneamente, devuelve un nuevo observable. emite valores hasta que todos los internos hayan emitido al menos 1 vez.
+      ob1:a
+      ob2:1
+         salida: a1
+      ob1:b
+      ob2:2,3,4
+         salida: b,2,3,4
+      ob1:c
+      ob2:(terminó)
+         salida: c4 (con el ultimo valor del anterior)
+forkjoin: combina los observables simultaneamente. los emite a la vez. no se dispata el complete hasta que todos los obsevables se completen. Los obserbables tienen que ser finitos
+   ob1:ab..cde
+   ob2:f..g...hi..j
+   ob3:1,2,3,4
+      salida: [e,j,4]<- lo ultimo, emite cuando todos terminan
+
+
+
